@@ -57,6 +57,7 @@ class QuadrotorDynamics : DynamicsBase {
   bool setMass(const Scalar mass);
   bool setArmLength(const Scalar arm_length);
   bool setMotortauInv(const Scalar tau_inv);
+  void setInertia(const Vector<3>& inertia_diag);
   Scalar motor_omega_max_;
 
   friend std::ostream& operator<<(std::ostream& os,

@@ -14,7 +14,7 @@ QuadrotorEnv::QuadrotorEnv(const std::string &cfg_path)
     ang_vel_coeff_(0.0),
     act_coeff_(0.0),
     prev_omega_act_(Vector<3>::Zero()),
-    goal_state_((Vector<quadenv::kNObs>() << 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0,
+    goal_state_((Vector<quadenv::kNObs>() << 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 0.0,
                  0.0, 0.0, 0.0, 0.0, 0.0)
                   .finished()) {
   // load configuration file
@@ -63,7 +63,10 @@ bool QuadrotorEnv::reset(Ref<Vector<>> obs, const bool random) {
     // reset
     static std::random_device rd;            // non-deterministic seed
     static std::mt19937 gen(rd());            // Mersenne Twister RNG
-    static std::uniform_real_distribution<Scalar> dist(-5, 5);
+    static std::uniform_real_distribution<Scalar> dist_z(-2.0, 2.0);
+    static std::uniform_real_distribution<Scalar> dist_xy(-2.0, 2.0);
+    static std::uniform_real_distribution<Scalar> dist_vel(-0.8, 0.8);
+    static std::uniform_real_distribution<Scalar> dist_quat(-0.3, 0.3);
     // static std::uniform_real_distribution<Scalar> dist2(-3.14, 3.14);
 
       // Eigen::Quaterniond q = Eigen::AngleAxisd(dist2(gen),   Eigen::Vector3d::UnitZ()) *
@@ -75,20 +78,36 @@ bool QuadrotorEnv::reset(Ref<Vector<>> obs, const bool random) {
 
       
       // std::cout<<"HI EVERYTHING IS RANDOM";
-      quad_state_.x(QS::POSX) = uniform_dist_(random_gen_);
-      quad_state_.x(QS::POSY) = uniform_dist_(random_gen_);
-      quad_state_.x(QS::POSZ) = uniform_dist_(random_gen_) + 5;
+      // quad_state_.x(QS::POSX) = uniform_dist_(random_gen_);
+      // quad_state_.x(QS::POSY) = uniform_dist_(random_gen_);
+      // quad_state_.x(QS::POSZ) = uniform_dist_(random_gen_) + 6;
+      // if (quad_state_.x(QS::POSZ) < -0.0)
+      //   quad_state_.x(QS::POSZ) = -quad_state_.x(QS::POSZ);
+      // // reset linear velocity
+      // quad_state_.x(QS::VELX) = uniform_dist_(random_gen_);
+      // quad_state_.x(QS::VELY) = uniform_dist_(random_gen_);
+      // quad_state_.x(QS::VELZ) = uniform_dist_(random_gen_); 
+      // // reset orientation
+      // quad_state_.x(QS::ATTW) = uniform_dist_(random_gen_);
+      // quad_state_.x(QS::ATTX) = uniform_dist_(random_gen_);
+      // quad_state_.x(QS::ATTY) = uniform_dist_(random_gen_);
+      // quad_state_.x(QS::ATTZ) = uniform_dist_(random_gen_);
+
+      quad_state_.x(QS::POSX) = dist_xy(gen);
+      quad_state_.x(QS::POSY) = dist_xy(gen);
+      quad_state_.x(QS::POSZ) = dist_z(gen) + 10;
       if (quad_state_.x(QS::POSZ) < -0.0)
         quad_state_.x(QS::POSZ) = -quad_state_.x(QS::POSZ);
       // reset linear velocity
-      quad_state_.x(QS::VELX) = uniform_dist_(random_gen_);
-      quad_state_.x(QS::VELY) = uniform_dist_(random_gen_);
-      quad_state_.x(QS::VELZ) = uniform_dist_(random_gen_); 
+      quad_state_.x(QS::VELX) = dist_vel(gen);
+      quad_state_.x(QS::VELY) = dist_vel(gen);
+      quad_state_.x(QS::VELZ) = dist_vel(gen); 
       // reset orientation
-      quad_state_.x(QS::ATTW) = uniform_dist_(random_gen_);
-      quad_state_.x(QS::ATTX) = uniform_dist_(random_gen_);
-      quad_state_.x(QS::ATTY) = uniform_dist_(random_gen_);
-      quad_state_.x(QS::ATTZ) = uniform_dist_(random_gen_);
+      quad_state_.x(QS::ATTW) = dist_quat(gen) + 1.0;
+      quad_state_.x(QS::ATTX) = dist_quat(gen);
+      quad_state_.x(QS::ATTY) = dist_quat(gen);
+      quad_state_.x(QS::ATTZ) = dist_quat(gen);
+
       // quad_state_.x(QS::ATTW) = q.w();
       // quad_state_.x(QS::ATTX) = q.x();
       // quad_state_.x(QS::ATTY) = q.y();
@@ -99,6 +118,7 @@ bool QuadrotorEnv::reset(Ref<Vector<>> obs, const bool random) {
   // reset quadrotor with random states
   quadrotor_ptr_->reset(quad_state_);
   quadrotor_ptr_->massrandomization();
+  //std::cout<<"RESET -> Mass: " << quadrotor_ptr_->getMass() << std::endl;
 
   // reset control command
   cmd_.t = 0.0;
@@ -146,7 +166,7 @@ Scalar QuadrotorEnv::step(const Ref<Vector<>> act, Ref<Vector<>> obs) {
   // std::cout<<"c1: "<<cmd_.collective_thrust<<std::endl;
   // cmd_.collective_thrust = quad_act_[0];
   // cmd_.collective_thrust = act[0]*3.0f + 9.81;
-  cmd_.omega << act[1]*5, act[2]*5, act[3];
+  cmd_.omega << act[1]*5, act[2]*5, act[3]*0.01;
   // std::cout<<cmd._omega<<std::endl;
   // simulate quadrotor
   quadrotor_ptr_->run(cmd_, sim_dt_);
@@ -158,16 +178,22 @@ Scalar QuadrotorEnv::step(const Ref<Vector<>> act, Ref<Vector<>> obs) {
 
   // ---------------------- reward function design
   // - position tracking  
-  Scalar pos_reward =
-    pos_coeff_ * (pos1_ -
-                  goal_state_.segment<quadenv::kNPos>(quadenv::kPos))
-                   .squaredNorm();
+  // Scalar pos_reward =
+  //   pos_coeff_ * (pos1_ -
+  //                 goal_state_.segment<quadenv::kNPos>(quadenv::kPos))
+  //                  .squaredNorm();
+  Scalar dist = (pos1_ - goal_state_.segment<quadenv::kNPos>(quadenv::kPos)).norm();
+  Scalar pos_reward = pos_coeff_exp_ * std::exp(exp_coeff_pos_ * dist) - pos_coeff_exp_;
   // std::cout<<"POS: "<<quad_obs_.segment<quadenv::kNPos>(quadenv::kPos)<<std::endl;
+
   // - orientation tracking
-  Scalar ori_reward =
-    ori_coeff_ * (euler_ -
-                  goal_state_.segment<quadenv::kNOri>(quadenv::kOri))
-                   .squaredNorm();
+  // Scalar ori_reward =
+  //   ori_coeff_ * (euler_ -
+  //                 goal_state_.segment<quadenv::kNOri>(quadenv::kOri))
+  //                  .squaredNorm();
+  Scalar ori_error = (euler_ - goal_state_.segment<quadenv::kNOri>(quadenv::kOri)).norm();
+  Scalar ori_reward = ori_coeff_exp_ * std::exp(exp_coeff_ori_ * ori_error) - ori_coeff_exp_;
+
   // - linear velocity tracking
   Scalar lin_vel_reward =
     lin_vel_coeff_ * (vel1_ -
@@ -228,6 +254,10 @@ bool QuadrotorEnv::loadParam(const YAML::Node &cfg) {
     act_coeff_ = cfg["rl"]["act_coeff"].as<Scalar>();
     omega_coeff_ = cfg["rl"]["omega_coeff"].as<Scalar>();
     yaw_coeff_ = cfg["rl"]["yaw_coeff"].as<Scalar>();
+    pos_coeff_exp_ = cfg["rl"]["pos_coeff_exp"].as<Scalar>();
+    exp_coeff_pos_ = cfg["rl"]["exp_coeff_pos"].as<Scalar>();
+    ori_coeff_exp_ = cfg["rl"]["ori_coeff_exp"].as<Scalar>();
+    exp_coeff_ori_ = cfg["rl"]["exp_coeff_ori"].as<Scalar>();
   } else {
     return false;
   }

@@ -76,7 +76,7 @@ class QuadrotorEnv final : public EnvBase {
   Logger logger_{"QaudrotorEnv"};
 
   // Define reward for training
-  Scalar pos_coeff_, ori_coeff_, lin_vel_coeff_, ang_vel_coeff_, act_coeff_, omega_coeff_, yaw_coeff_;
+  Scalar pos_coeff_, ori_coeff_, lin_vel_coeff_, ang_vel_coeff_, act_coeff_, omega_coeff_, yaw_coeff_, pos_coeff_exp_, exp_coeff_pos_, ori_coeff_exp_, exp_coeff_ori_;
 
   // observations and actions (for RL)
   Vector<quadenv::kNObs> quad_obs_;

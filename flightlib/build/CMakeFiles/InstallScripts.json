@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"/home/vasudevan/Desktop/flightmare/flightlib/build/cmake_install.cmake"
+		"/home/shivansh/flightmare_sim/flightmare/flightlib/build/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

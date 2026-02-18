@@ -396,8 +396,23 @@ class PPO2(ActorCriticRLModel):
                         logger.logkv("fps", fps)
                         logger.logkv("explained_variance", float(explained_var))
                         if len(self.ep_info_buf) > 0 and len(self.ep_info_buf[0]) > 0:
-                            logger.logkv('ep_reward_mean', safe_mean([ep_info['r'] for ep_info in self.ep_info_buf]))
-                            logger.logkv('ep_len_mean', safe_mean([ep_info['l'] for ep_info in self.ep_info_buf]))
+                            ep_rewards = [ep_info['r'] for ep_info in self.ep_info_buf]
+                            ep_lengths = [ep_info['l'] for ep_info in self.ep_info_buf]
+                            mean_reward = safe_mean(ep_rewards)
+                            mean_length = safe_mean(ep_lengths)
+
+                            # Log to console/logger
+                            logger.logkv('ep_reward_mean', mean_reward)
+                            logger.logkv('ep_len_mean', mean_length)
+
+                            # Log to TensorBoard
+                            if writer is not None:
+                                summary = tf.Summary(value=[
+                                    tf.Summary.Value(tag='ep_reward_mean', simple_value=float(mean_reward)),
+                                    tf.Summary.Value(tag='ep_len_mean', simple_value=float(mean_length))
+                                ])
+                                writer.add_summary(summary, update)
+                                writer.flush()
                         logger.logkv('time_elapsed', t_start - t_first_start)
                         logger.logkv('true_reward', np.mean(true_reward))
                         for (loss_val, loss_name) in zip(loss_vals, self.loss_names):

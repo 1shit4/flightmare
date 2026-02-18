@@ -165,7 +165,16 @@ bool QuadrotorDynamics::setMotortauInv(const Scalar tau_inv) {
     return false;
   }
   motor_tau_inv_ = tau_inv;
+  //tau_up = 1/4 of tau.
+  motor_tau_up_inv_ = 4.0 * motor_tau_inv_;
+  //tau_down = 1/2 of tau.
+  motor_tau_down_inv_ = 2.0 * motor_tau_inv_;
   return true;
+}
+
+void QuadrotorDynamics::setInertia(const Vector<3>& inertia_diag) {
+  J_ = inertia_diag.asDiagonal();
+  J_inv_ = J_.inverse();
 }
 
 bool QuadrotorDynamics::updateParams(const YAML::Node& params) {

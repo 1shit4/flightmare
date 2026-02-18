@@ -347,11 +347,24 @@ bool Quadrotor::getCamera(const size_t cam_id,
 
 void Quadrotor::massrandomization()
 {
-  // static std::random_device rd;            // non-deterministic seed
-  static std::mt19937 gen(0);            // Mersenne Twister RNG
-  static std::uniform_real_distribution<Scalar> dist(-1.0, 1.0);
+  static std::random_device rd;            // non-deterministic seed
+  static std::mt19937 gen(rd());            // Mersenne Twister RNG
+  static std::uniform_real_distribution<Scalar> dist_mass(-0.5, 0.5);
+  static std::uniform_real_distribution<Scalar> dist_arm(0.15, 0.27);
+  static std::uniform_real_distribution<Scalar> dist_tau(0.01, 0.09);
+  static std::uniform_real_distribution<Scalar> dist_inertia_scale(0.5, 1.5);
+  Scalar new_tau = dist_tau(gen);
+  dynamics_.setMass(dist_mass(gen));
+  dynamics_.setArmLength(dist_arm(gen));
+  //dynamics_.setMotortauInv(1.0/new_tau);
 
-  dynamics_.setMass(dist(gen));
+  updateDynamics(dynamics_);
+
+  Matrix<3, 3> J_symmetric = dynamics_.getJ();
+  Vector<3> inertia_assymetric;
+  inertia_assymetric << J_symmetric(0, 0) * dist_inertia_scale(gen), J_symmetric(1, 1) * dist_inertia_scale(gen), J_symmetric(2, 2) * dist_inertia_scale(gen);
+  dynamics_.setInertia(inertia_assymetric);
+
 
 }
 

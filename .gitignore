@@ -19,3 +19,5 @@ _build/
 _posts
 _site
 
+flightrl/examples/saved/
+flightrl/examples/saved_new/

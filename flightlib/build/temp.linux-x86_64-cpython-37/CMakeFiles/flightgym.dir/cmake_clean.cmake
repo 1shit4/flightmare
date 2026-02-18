@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/vasudevan/Desktop/flightmare/flightlib/flightgym.cpython-37m-x86_64-linux-gnu.so"
-  "/home/vasudevan/Desktop/flightmare/flightlib/flightgym.pdb"
+  "/home/shivansh/flightmare_sim/flightmare/flightlib/flightgym.cpython-37m-x86_64-linux-gnu.so"
+  "/home/shivansh/flightmare_sim/flightmare/flightlib/flightgym.pdb"
   "CMakeFiles/flightgym.dir/src/wrapper/pybind_wrapper.cpp.o"
   "CMakeFiles/flightgym.dir/src/wrapper/pybind_wrapper.cpp.o.d"
 )

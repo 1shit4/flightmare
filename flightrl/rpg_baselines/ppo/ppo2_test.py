@@ -30,8 +30,8 @@ def test_model(env, model, render=False):
     ax_action2 = fig.add_subplot(gs[4, 6:9])
     ax_action3 = fig.add_subplot(gs[4, 9:12])
 
-    max_ep_length = env.max_episode_steps
-    # max_ep_length = 1500
+    # max_ep_length = env.max_episode_steps
+    max_ep_length = 3000
     num_rollouts = 1
     if render:
         env.connectUnity()
@@ -69,8 +69,8 @@ def test_model(env, model, render=False):
         # print(i)
         action_collector = np.array(action_collector)
         np.save("actions_anh.npy", action_collector)
-        print(sum(rewards))
-        print(rewards)
+        print(f"Reward Sum: {sum(rewards)}")
+        #print(f"REward: {rewards}")
         print(action_collector.shape)
         pos = np.asarray(pos)
         dpos = np.asarray(dpos)

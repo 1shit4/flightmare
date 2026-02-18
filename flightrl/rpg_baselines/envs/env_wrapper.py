@@ -26,7 +26,7 @@ class EnvWrapper(gym.Env):
 
         gym.Env.__init__(self)
         #
-        self._max_episode_steps = 300
+        self._max_episode_steps = 600
 
     def seed(self, seed=None):
         self.env.setSeed(seed)
